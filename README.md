@@ -2,8 +2,8 @@
 
 | Class      | Person   |   Status   |
 | ---------  | -------- | ---------- |
-| Ahmed      | Priority | progress   |
-| abdulwahab | SJF      | progress   |
+| Ahmed      |  Priority| progress   |
+| Abdulwahab |  SJF     | progress   |
 | Hassan     |  SRTF    | progress   |
 | Abdullah   |  FCAI    | progress   |
 
