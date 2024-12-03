@@ -6,9 +6,6 @@ import java.util.Scanner;
 
 public class CPU_Simulator {
     public static void main(String[] args) {
-        InputHandler inputHandler = new InputHandler();
-        List<Process> processes = inputHandler.getProcessesFromFile("input.txt");
-
         Scanner scanner = new Scanner(System.in);
         System.out.println("Select a Scheduler:");
         System.out.println("1. Non-preemptive Priority Scheduling");
@@ -25,15 +22,17 @@ public class CPU_Simulator {
             default -> throw new IllegalArgumentException("Invalid Choice");
         };
 
+        InputHandler inputHandler = new InputHandler();
+        List<Process> processes = inputHandler.getProcessesFromFile("/Users/bdallhsydbdallh/Library/Mobile Documents/com~apple~CloudDocs/4-OS/Labs/OS_Assignment-3/src/main/java/org/example/input.txt", choice);
+
         Scheduler scheduler = SchedulerFactory.createScheduler(schedulerType, processes);
 
-        // Display the initial processes list
+        System.out.println("\nInitial Processes list:");
         scheduler.Display_initial_process_list();
 
-        // Perform scheduling
+        System.out.println("\nScheduling Processes Start:");
         scheduler.schedule();
 
-        // Display results
         System.out.println("\nExecution Timeline:");
         scheduler.detailedExecutionTimeline();
 

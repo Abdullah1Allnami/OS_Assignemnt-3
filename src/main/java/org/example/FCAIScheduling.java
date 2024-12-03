@@ -14,23 +14,44 @@ public class FCAIScheduling implements Scheduler {
     }
 
     private float computeV1(List<Process> processes) {
-        // Implement
-        return 0;
+        float last_arrival_time = Float.MIN_VALUE;
+        for (Process process : processes) {
+            if (process.getArrivalTime() > last_arrival_time) {
+                last_arrival_time = process.getArrivalTime();
+            }
+        }
+        return last_arrival_time / 10;
     }
 
     private float computeV2(List<Process> processes) {
-        // Implement
-        return 0;
+        float max_brust_time = Float.MIN_VALUE;
+        for (Process process : processes) {
+            if (process.getBurstTime() > max_brust_time) {
+                max_brust_time = process.getBurstTime();
+            }
+        }
+        return max_brust_time / 10;
     }
 
     private float calculateFcaiFactor(Process process) {
-        // Implement
-        return 0;
+        return (float) Math.ceil((10 - process.getPriority()) +
+                (process.getArrivalTime() / V1) +
+                (process.getBurstTime() / V2));
     }
 
     @Override
     public void schedule() {
-        // Implement
+        System.out.printf("%-10s %-12s %-12s %-12s %-8s %-8s%n", "Processes", "Burst-time", "Arrival-time", "Priority", "Quantum", "Initial-FCAI-Factors");
+        for (Process process : processes) {
+            System.out.printf("%-10s %-12.1f %-12.1f %-12d %-8d %-8s %n",
+                    process.getName(),
+                    process.getBurstTime(),
+                    process.getArrivalTime(),
+                    process.getPriority(),
+                    process.getQuantum(),
+                    calculateFcaiFactor(process)
+            );
+        }
     }
 
     @Override
@@ -51,6 +72,16 @@ public class FCAIScheduling implements Scheduler {
 
     @Override
     public void Display_initial_process_list() {
+        System.out.printf("%-10s %-12s %-12s %-12s %-8s%n", "Processes", "Burst-time", "Arrival-time", "Priority", "Quantum");
+        for (Process process : processes) {
+            System.out.printf("%-10s %-12.1f %-12.1f %-12d %-8d%n",
+                    process.getName(),
+                    process.getBurstTime(),
+                    process.getArrivalTime(),
+                    process.getPriority(),
+                    process.getQuantum());
+        }
+
 
     }
 }

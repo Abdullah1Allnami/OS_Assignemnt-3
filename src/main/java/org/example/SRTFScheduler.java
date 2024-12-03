@@ -32,6 +32,13 @@ public class SRTFScheduler implements Scheduler {
     }
     @Override
     public void Display_initial_process_list() {
-
+        System.out.printf("%-10s %-12s %-12s %-12s %n", "Processes", "Burst-time", "Arrival-time", "Priority");
+        for (Process process : processes) {
+            System.out.printf("%-10s %-12.1f %-12.1f %-12d %n",
+                    process.getName(),
+                    process.getBurstTime(),
+                    process.getArrivalTime(),
+                    process.getPriority());
+        }
     }
 }

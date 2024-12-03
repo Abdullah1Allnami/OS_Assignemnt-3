@@ -7,9 +7,8 @@ import java.util.List;
 import java.util.Scanner;
 
 public class InputHandler {
-    private int round_robin_q;
 
-    public List<Process> getProcessesFromFile(String fileName) {
+    public List<Process> getProcessesFromFile(String fileName, int choice) {
         List<Process> processes = new ArrayList<>();
         try {
             Scanner scanner = new Scanner(new File(fileName));
@@ -17,20 +16,22 @@ public class InputHandler {
             // Read the number of processes
             int number_of_processes = Integer.parseInt(scanner.nextLine().trim());
 
-            // Read the round-robin time quantum
-            this.round_robin_q = Integer.parseInt(scanner.nextLine().trim());
+            // Read the round-robin time quantum and assign to global variable
+            Config.round_robin_q = Integer.parseInt(scanner.nextLine().trim());
 
             // Read each process data
             for (int i = 0; i < number_of_processes; ++i) {
                 if (scanner.hasNextLine()) {
                     String[] processDetails = scanner.nextLine().trim().split("\\s+");
                     String name = processDetails[0];
-                    String color = processDetails[1];
+                    float brust_time = Float.parseFloat(processDetails[1]);
                     float arrival_time = Float.parseFloat(processDetails[2]);
-                    float brust_time = Float.parseFloat(processDetails[3]);
-                    int priority = Integer.parseInt(processDetails[4]);
-
-                    Process process = new Process(name, color, arrival_time, brust_time, priority);
+                    int priority = Integer.parseInt(processDetails[3]);
+                    int quantum = 0;
+                    if(choice == 4){
+                         quantum = Integer.parseInt(processDetails[4]);
+                    }
+                    Process process = new Process(name, arrival_time, brust_time, priority, quantum);
                     processes.add(process);
                 }
             }
@@ -43,9 +44,5 @@ public class InputHandler {
         }
 
         return processes;
-    }
-
-    public int getRound_robin_q() {
-        return round_robin_q;
     }
 }
