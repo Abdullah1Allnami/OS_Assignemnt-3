@@ -24,7 +24,7 @@ public class InputHandler {
                 if (scanner.hasNextLine()) {
                     String[] processDetails = scanner.nextLine().trim().split("\\s+");
                     String name = processDetails[0];
-                    float brust_time = Float.parseFloat(processDetails[1]);
+                    int brust_time = Integer.parseInt(processDetails[1]);
                     int arrival_time = Integer.parseInt(processDetails[2]);
                     int priority = Integer.parseInt(processDetails[3]);
                     int quantum = 0;
@@ -46,3 +46,12 @@ public class InputHandler {
         return processes;
     }
 }
+
+
+//4
+//round_robin
+//context
+//P1 brust arrival
+//P2 6
+//P3 10
+//P4 4
