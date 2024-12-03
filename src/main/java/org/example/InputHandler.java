@@ -25,7 +25,7 @@ public class InputHandler {
                     String[] processDetails = scanner.nextLine().trim().split("\\s+");
                     String name = processDetails[0];
                     float brust_time = Float.parseFloat(processDetails[1]);
-                    float arrival_time = Float.parseFloat(processDetails[2]);
+                    int arrival_time = Integer.parseInt(processDetails[2]);
                     int priority = Integer.parseInt(processDetails[3]);
                     int quantum = 0;
                     if(choice == 4){

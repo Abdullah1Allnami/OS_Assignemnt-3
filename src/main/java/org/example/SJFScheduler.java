@@ -10,10 +10,6 @@ public class SJFScheduler implements Scheduler {
         this.processes = processes;
     }
 
-    @Override
-    public void schedule() {
-        // Implement the code here
-    }
 
     @Override
     public void detailedExecutionTimeline() {

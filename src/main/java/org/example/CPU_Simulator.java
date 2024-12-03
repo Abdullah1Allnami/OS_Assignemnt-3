@@ -30,13 +30,8 @@ public class CPU_Simulator {
         System.out.println("\nInitial Processes list:");
         scheduler.Display_initial_process_list();
 
-        System.out.println("\nScheduling Processes Start:");
-        scheduler.schedule();
-
         System.out.println("\nExecution Timeline:");
         scheduler.detailedExecutionTimeline();
-
-        System.out.println("\nFinal Results:");
 
         System.out.println("Waiting Times:");
         scheduler.calculateWaitingTime(processes);

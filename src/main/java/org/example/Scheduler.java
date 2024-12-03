@@ -3,8 +3,6 @@ package org.example;
 import java.util.List;
 
 public interface Scheduler {
-    // Implements the core scheduling logic for the specific algorithm
-    void schedule();
     // Outputs or logs a detailed timeline of process execution, showing when each process starts and ends
     void detailedExecutionTimeline();
     // Computes the waiting time for each process based on the algorithm's scheduling order.

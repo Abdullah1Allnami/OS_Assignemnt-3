@@ -5,10 +5,6 @@ import java.util.List;
 public class PrioritySchedulingContextSwitching implements Scheduler {
     private List<Process> processes;
 
-    public void schedule() {
-        // Implement the code here
-    }
-
     @Override
     public void detailedExecutionTimeline() {
         // Implement the code here

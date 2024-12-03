@@ -9,10 +9,7 @@ public class SRTFScheduler implements Scheduler {
         this.processes = processes;
     }
 
-    @Override
-    public void schedule() {
-        // Implement the code here
-    }
+
 
     @Override
     public void detailedExecutionTimeline() {

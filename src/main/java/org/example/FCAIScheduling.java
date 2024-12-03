@@ -1,5 +1,5 @@
 package org.example;
-
+import java.util.*;
 import java.util.List;
 
 public class FCAIScheduling implements Scheduler {
@@ -40,24 +40,9 @@ public class FCAIScheduling implements Scheduler {
     }
 
     @Override
-    public void schedule() {
-        System.out.printf("%-10s %-12s %-12s %-12s %-8s %-8s%n", "Processes", "Burst-time", "Arrival-time", "Priority", "Quantum", "Initial-FCAI-Factors");
-        for (Process process : processes) {
-            System.out.printf("%-10s %-12.1f %-12.1f %-12d %-8d %-8s %n",
-                    process.getName(),
-                    process.getBurstTime(),
-                    process.getArrivalTime(),
-                    process.getPriority(),
-                    process.getQuantum(),
-                    calculateFcaiFactor(process)
-            );
-        }
-    }
-
-    @Override
     public void detailedExecutionTimeline() {
-        // Implement
-        return;
+
+
     }
 
     @Override
@@ -72,16 +57,16 @@ public class FCAIScheduling implements Scheduler {
 
     @Override
     public void Display_initial_process_list() {
-        System.out.printf("%-10s %-12s %-12s %-12s %-8s%n", "Processes", "Burst-time", "Arrival-time", "Priority", "Quantum");
+        System.out.printf("%-10s %-12s %-12s %-12s %-8s %-8s%n", "Processes", "Burst-time", "Arrival-time", "Priority", "Quantum", "Initial-FCAI-Factors");
         for (Process process : processes) {
-            System.out.printf("%-10s %-12.1f %-12.1f %-12d %-8d%n",
+            System.out.printf("%-10s %-12.1f %-12.1s %-12d %-8d %-8s %n",
                     process.getName(),
                     process.getBurstTime(),
                     process.getArrivalTime(),
                     process.getPriority(),
-                    process.getQuantum());
+                    process.getQuantum(),
+                    calculateFcaiFactor(process)
+            );
         }
-
-
     }
 }
