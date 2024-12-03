@@ -19,6 +19,8 @@ public class InputHandler {
             // Read the round-robin time quantum and assign to global variable
             Config.round_robin_q = Integer.parseInt(scanner.nextLine().trim());
 
+            Config.context = Float.parseFloat(scanner.nextLine().trim());
+
             // Read each process data
             for (int i = 0; i < number_of_processes; ++i) {
                 if (scanner.hasNextLine()) {
@@ -27,15 +29,11 @@ public class InputHandler {
                     int brust_time = Integer.parseInt(processDetails[1]);
                     int arrival_time = Integer.parseInt(processDetails[2]);
                     int priority = Integer.parseInt(processDetails[3]);
-                    int quantum = 0;
-                    if(choice == 4){
-                         quantum = Integer.parseInt(processDetails[4]);
-                    }
+                    int quantum = Integer.parseInt(processDetails[4]);
                     Process process = new Process(name, arrival_time, brust_time, priority, quantum);
                     processes.add(process);
                 }
             }
-
             scanner.close();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + fileName);
@@ -47,11 +45,3 @@ public class InputHandler {
     }
 }
 
-
-//4
-//round_robin
-//context
-//P1 brust arrival
-//P2 6
-//P3 10
-//P4 4

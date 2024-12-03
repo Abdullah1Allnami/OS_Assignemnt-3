@@ -87,14 +87,14 @@ public class FCAIScheduling implements Scheduler {
         System.out.printf("%-10s %-12s %-12s %-12s %-8s %-8s%n", "Processes", "Burst-time",
                 "Arrival-time", "Priority", "Quantum", "Initial-FCAI-Factors");
         for (Process process : processes) {
-            System.out.printf("%-10s %-12.1s %-12.1s %-12d %-8d %-8s %n",
+            System.out.printf("%-10s %-12.1s %-12.1s %-12d %-8d %.2f%n",
                     process.getName(),
                     process.getBurstTime(),
                     process.getArrivalTime(),
                     process.getPriority(),
                     process.getQuantum(),
-                    calculateFcaiFactor(process)
-            );
+                    calculateFcaiFactor(process));
         }
     }
+
 }
