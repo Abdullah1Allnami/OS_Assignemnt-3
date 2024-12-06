@@ -111,6 +111,7 @@ public class FCAIScheduling implements Scheduler {
                             waiting = null;
                         }
                     }
+
                     if (!updatedQueue.isEmpty() && calculateFcaiFactor(updatedQueue.get(0)) < calculateFcaiFactor(running)) {
                         running.setQuantum(runningQuantum * 2 - i);
                         break;
@@ -128,27 +129,38 @@ public class FCAIScheduling implements Scheduler {
 
     @Override
     public List<Process> calculateWaitingTime(List<Process> processes) {
+        if (processes == null || processes.isEmpty()) {
+            System.out.println("No processes available to calculate waiting time.");
+            return processes;
+        }
+
         float totalWaitingTime = 0;
         System.out.printf("%-10s %-12s%n", "Processes", "WaitingTime");
         for (Process process : processes) {
-            System.out.printf("%-10s %-12d%n", process.getName(), process.getWaitTime());
+            System.out.printf("%-10s %-12.2f%n", process.getName(), process.getWaitTime());
             totalWaitingTime += process.getWaitTime();
         }
-        System.out.println("Average Waiting Time: " + (totalWaitingTime / processes.size()));
+        System.out.printf("Average Waiting Time: %.2f%n", totalWaitingTime / processes.size());
         return processes;
     }
 
     @Override
     public List<Process> calculateTurnaroundTime(List<Process> processes) {
+        if (processes == null || processes.isEmpty()) {
+            System.out.println("No processes available to calculate turnaround time.");
+            return processes;
+        }
+
         float totalTurnaroundTime = 0;
         System.out.printf("%-10s %-12s%n", "Processes", "TurnaroundTime");
         for (Process process : processes) {
-            System.out.printf("%-10s %-12d%n", process.getName(), process.getTurnaroundTime());
+            System.out.printf("%-10s %-12.2f%n", process.getName(), process.getTurnaroundTime());
             totalTurnaroundTime += process.getTurnaroundTime();
         }
-        System.out.println("Average Turnaround Time: " + (totalTurnaroundTime / processes.size()));
+        System.out.printf("Average Turnaround Time: %.2f%n", totalTurnaroundTime / processes.size());
         return processes;
     }
+
 
     @Override
     public void Display_initial_process_list() {
