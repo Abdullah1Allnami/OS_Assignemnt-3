@@ -1,17 +1,17 @@
 package org.example;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SRTFScheduler implements Scheduler {
     private List<Process> processes;
-    private float contextSwitchTime;
-    private int agingThreshold; // Threshold to apply aging
+
+    // Aging parameters
+    private final float contextSwitchTime = 0.5f;  // Time required for context switching
+    private final int agingThreshold = 10;        // Threshold to start aging
+    private final float scalingFactor = 5.0f;     // Factor to scale aging adjustments
 
     public SRTFScheduler(List<Process> processes) {
         this.processes = processes;
-        this.contextSwitchTime = contextSwitchTime;
-        this.agingThreshold = agingThreshold;
     }
 
     @Override
@@ -34,14 +34,14 @@ public class SRTFScheduler implements Scheduler {
             int minIndex = -1;
             int minTime = Integer.MAX_VALUE;
 
-            // Find the process with the shortest remaining burst time
+            // Find the process with the shortest remaining burst time, considering aging
             for (int i = 0; i < n; i++) {
                 if (!isCompleted[i] && processes.get(i).getArrivalTime() <= currentTime) {
                     int effectiveBurstTime = remainingBurstTime[i];
 
-                    // Apply aging: reduce burst time for long-waiting processes
+                    // Apply aging if the process has waited too long
                     if (waitingTime[i] >= agingThreshold) {
-                        effectiveBurstTime -= 1;
+                        effectiveBurstTime -= (waitingTime[i] / scalingFactor);
                         if (effectiveBurstTime < 1) effectiveBurstTime = 1; // Ensure minimum burst time
                     }
 
@@ -97,8 +97,6 @@ public class SRTFScheduler implements Scheduler {
             previousProcess = currentProcess;
         }
     }
-
-
 
     @Override
     public List<Process> calculateWaitingTime(List<Process> processes) {
