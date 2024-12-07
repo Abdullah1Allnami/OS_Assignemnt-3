@@ -2,11 +2,14 @@ package org.example;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PrioritySchedulingContextSwitching implements Scheduler {
     private List<Process> processes;
     private List<Process> completedProcesses;
+    private static final float AGING_FACTOR = 1.0f; // Priority boost per time unit
 
     public PrioritySchedulingContextSwitching(List<Process> processes) {
         this.processes = new ArrayList<>();
@@ -21,6 +24,8 @@ public class PrioritySchedulingContextSwitching implements Scheduler {
         List<Process> readyQueue = new ArrayList<>();
         List<Process> remainingProcesses = new ArrayList<>(processes);
         float currentTime = 0;
+        // Track waiting time for each process
+        Map<Process, Float> waitingTimes = new HashMap<>();
 
         while (!remainingProcesses.isEmpty() || !readyQueue.isEmpty()) {
             // Add arrived processes to ready queue
@@ -28,15 +33,28 @@ public class PrioritySchedulingContextSwitching implements Scheduler {
                 Process p = remainingProcesses.get(i);
                 if (p.getArrivalTime() <= currentTime) {
                     readyQueue.add(p);
+                    waitingTimes.put(p, 0.0f);  // Initialize waiting time
                     remainingProcesses.remove(i);
                     i--;
                 }
             }
 
             if (!readyQueue.isEmpty()) {
-                // Sort by priority (lower number = higher priority)
-                readyQueue.sort(Comparator.comparing(Process::getPriority));
+                // Apply aging to all processes in ready queue
+                for (Process p : readyQueue) {
+                    float waitTime = waitingTimes.get(p);
+                    waitingTimes.put(p, waitTime + AGING_FACTOR);
+                }
+
+                // Sort by effective priority (original priority adjusted by waiting time)
+                readyQueue.sort((p1, p2) -> {
+                    float effectivePriority1 = p1.getPriority() - waitingTimes.get(p1);
+                    float effectivePriority2 = p2.getPriority() - waitingTimes.get(p2);
+                    return Float.compare(effectivePriority1, effectivePriority2);
+                });
+
                 Process currentProcess = readyQueue.remove(0);
+                waitingTimes.remove(currentProcess);  // Remove from waiting times
 
                 // Add context switch time if this isn't the first process
                 if (!completedProcesses.isEmpty()) {
@@ -98,11 +116,12 @@ public class PrioritySchedulingContextSwitching implements Scheduler {
             if (prevProcess != null) {
                 currentTime += Config.context;
             }
-            float waitingTime = Math.max(0, currentTime - p.getArrivalTime());
+            currentTime += p.getBurstTime();
+            float turnaroundTime = currentTime - p.getArrivalTime();
+            float waitingTime = turnaroundTime - p.getBurstTime();
             Process waitingProcess = new Process(p.getName(), (int)waitingTime, p.getBurstTime(), p.getPriority(), p.getQuantum());
             waitingTimes.add(waitingProcess);
             System.out.printf("Process %s waiting time: %.1f%n", p.getName(), waitingTime);
-            currentTime += p.getBurstTime();
             prevProcess = p;
         }
 
@@ -164,5 +183,4 @@ public class PrioritySchedulingContextSwitching implements Scheduler {
             );
         }
     }
-
 }
