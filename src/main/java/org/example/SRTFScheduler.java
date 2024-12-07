@@ -5,11 +5,11 @@ import java.util.List;
 
 public class SRTFScheduler implements Scheduler {
     private List<Process> processes;
-    private int agingThreshold;
+    private float contextSwitchTime;
 
     public SRTFScheduler(List<Process> processes) {
         this.processes = processes;
-        this.agingThreshold = 10; // Set a threshold for aging (customizable)
+        this.contextSwitchTime = contextSwitchTime;
     }
 
     @Override
@@ -19,7 +19,7 @@ public class SRTFScheduler implements Scheduler {
         int n = processes.size();
         int[] remainingBurstTime = new int[n];
         boolean[] isCompleted = new boolean[n];
-        int[] waitingTime = new int[n];
+        Process previousProcess = null; // Track the previously running process
 
         // Initialize remaining burst times
         for (int i = 0; i < n; i++) {
@@ -34,14 +34,8 @@ public class SRTFScheduler implements Scheduler {
             // Find the process with the shortest remaining burst time
             for (int i = 0; i < n; i++) {
                 if (!isCompleted[i] && processes.get(i).getArrivalTime() <= currentTime) {
-                    // Apply aging to prevent starvation
-                    int effectiveBurstTime = remainingBurstTime[i];
-                    if (waitingTime[i] >= agingThreshold) {
-                        effectiveBurstTime -= 1; // Aging factor reduces burst time
-                    }
-
-                    if (effectiveBurstTime < minTime) {
-                        minTime = effectiveBurstTime;
+                    if (remainingBurstTime[i] < minTime) {
+                        minTime = remainingBurstTime[i];
                         minIndex = i;
                     }
                 }
@@ -54,18 +48,21 @@ public class SRTFScheduler implements Scheduler {
             }
 
             Process currentProcess = processes.get(minIndex);
+
+            // Simulate context switching if the process is different from the previous one
+            if (previousProcess != null && !previousProcess.getName().equals(currentProcess.getName())) {
+                System.out.printf("Time %.1f: Context switch from %s to %s%n",
+                        (float) currentTime,
+                        previousProcess.getName(),
+                        currentProcess.getName());
+                currentTime += contextSwitchTime; // Add context switch time
+            }
+
             System.out.printf("Time %d: Process %s starts execution%n", currentTime, currentProcess.getName());
 
             // Execute the process for one time unit
             remainingBurstTime[minIndex]--;
             currentTime++;
-
-            // Update waiting times for all other processes
-            for (int i = 0; i < n; i++) {
-                if (i != minIndex && !isCompleted[i] && processes.get(i).getArrivalTime() <= currentTime) {
-                    waitingTime[i]++;
-                }
-            }
 
             // Check if process is completed
             if (remainingBurstTime[minIndex] == 0) {
@@ -73,17 +70,23 @@ public class SRTFScheduler implements Scheduler {
                 completed++;
                 int completionTime = currentTime;
                 currentProcess.setTurnaroundTime(completionTime - currentProcess.getArrivalTime());
-                currentProcess.setWaitingTime((int) currentProcess.getTurnaroundTime() - currentProcess.getBurstTime());
+                float waitTime = currentProcess.getTurnaroundTime() - currentProcess.getBurstTime();
+                currentProcess.setWaitTime(waitTime);
                 System.out.printf("Time %d: Process %s completes execution%n", currentTime, currentProcess.getName());
             }
+
+            // Update the previous process
+            previousProcess = currentProcess;
         }
     }
+
+
 
     @Override
     public List<Process> calculateWaitingTime(List<Process> processes) {
         System.out.println("\nWaiting Times:");
         for (Process process : processes) {
-            System.out.printf("Process %s waiting time: %d%n", process.getName(), process.getWaitingTime());
+            System.out.printf("Process %s waiting time: %.1f%n", process.getName(), process.getWaitTime());
         }
         return processes;
     }
