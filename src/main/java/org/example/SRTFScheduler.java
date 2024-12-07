@@ -6,10 +6,12 @@ import java.util.List;
 public class SRTFScheduler implements Scheduler {
     private List<Process> processes;
     private float contextSwitchTime;
+    private int agingThreshold; // Threshold to apply aging
 
     public SRTFScheduler(List<Process> processes) {
         this.processes = processes;
         this.contextSwitchTime = contextSwitchTime;
+        this.agingThreshold = agingThreshold;
     }
 
     @Override
@@ -19,6 +21,7 @@ public class SRTFScheduler implements Scheduler {
         int n = processes.size();
         int[] remainingBurstTime = new int[n];
         boolean[] isCompleted = new boolean[n];
+        int[] waitingTime = new int[n]; // Track waiting times for aging
         Process previousProcess = null; // Track the previously running process
 
         // Initialize remaining burst times
@@ -34,8 +37,16 @@ public class SRTFScheduler implements Scheduler {
             // Find the process with the shortest remaining burst time
             for (int i = 0; i < n; i++) {
                 if (!isCompleted[i] && processes.get(i).getArrivalTime() <= currentTime) {
-                    if (remainingBurstTime[i] < minTime) {
-                        minTime = remainingBurstTime[i];
+                    int effectiveBurstTime = remainingBurstTime[i];
+
+                    // Apply aging: reduce burst time for long-waiting processes
+                    if (waitingTime[i] >= agingThreshold) {
+                        effectiveBurstTime -= 1;
+                        if (effectiveBurstTime < 1) effectiveBurstTime = 1; // Ensure minimum burst time
+                    }
+
+                    if (effectiveBurstTime < minTime) {
+                        minTime = effectiveBurstTime;
                         minIndex = i;
                     }
                 }
@@ -63,6 +74,13 @@ public class SRTFScheduler implements Scheduler {
             // Execute the process for one time unit
             remainingBurstTime[minIndex]--;
             currentTime++;
+
+            // Update waiting times for all other processes
+            for (int i = 0; i < n; i++) {
+                if (i != minIndex && !isCompleted[i] && processes.get(i).getArrivalTime() <= currentTime) {
+                    waitingTime[i]++;
+                }
+            }
 
             // Check if process is completed
             if (remainingBurstTime[minIndex] == 0) {
