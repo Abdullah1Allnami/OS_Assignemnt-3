@@ -1,101 +1,175 @@
 package org.example;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class SJFScheduler implements Scheduler {
-
     private List<Process> processes;
     private List<Process> completedProcesses;
-    private int currentTime;
 
     SJFScheduler(List<Process> processes) {
         this.processes = new ArrayList<>(processes);
         this.completedProcesses = new ArrayList<>();
-        this.currentTime = 0;
+        executeProcesses();
+    }
+
+    private void executeProcesses() {
+        List<Process> remainingProcesses = new ArrayList<>(processes);
+        List<Process> readyQueue = new ArrayList<>();
+        float currentTime = 0;
+        Process currentProcess = null;
+        int remainingBurstTime = 0;
+
+        while (!remainingProcesses.isEmpty() || !readyQueue.isEmpty() || currentProcess != null) {
+            // Add arrived processes to ready queue
+            updateReadyQueue(remainingProcesses, readyQueue, currentTime);
+
+            // If we have a current process, add it back to ready queue to compare with new arrivals
+            if (currentProcess != null) {
+                currentProcess.setBurstTime(remainingBurstTime);
+                readyQueue.add(currentProcess);
+                currentProcess = null;
+            }
+
+            if (!readyQueue.isEmpty()) {
+                // Sort ready queue by burst time (shortest remaining time first)
+                readyQueue.sort(Comparator.comparingInt(Process::getBurstTime));
+                
+                // Get the process with shortest remaining time
+                Process nextProcess = readyQueue.remove(0);
+                
+                if (currentProcess == null || nextProcess != currentProcess) {
+                    // Process switch occurred
+                    if (currentProcess != null) {
+                        System.out.printf("Time %.1f: Process %s preempted by Process %s (Remaining Time: %d)%n",
+                                currentTime, currentProcess.getName(), nextProcess.getName(), remainingBurstTime);
+                    }
+                    currentProcess = nextProcess;
+                    remainingBurstTime = currentProcess.getBurstTime();
+                    
+                    // Calculate waiting time
+                    float waitingTime = currentTime - currentProcess.getArrivalTime();
+                    if (waitingTime > 0) {
+                        currentProcess.setWaitingTime((int) waitingTime);
+                    }
+                    
+                    System.out.printf("Time %.1f: Process %s starts/resumes execution (Remaining Time: %d)%n",
+                            currentTime, currentProcess.getName(), remainingBurstTime);
+                }
+
+                // Execute for 1 time unit
+                currentTime++;
+                remainingBurstTime--;
+
+                if (remainingBurstTime == 0) {
+                    // Process completed
+                    System.out.printf("Time %.1f: Process %s completes execution%n",
+                            currentTime, currentProcess.getName());
+                    
+                    // Calculate turnaround time
+                    float turnaroundTime = currentTime - currentProcess.getArrivalTime();
+                    currentProcess.setTurnaroundTime(turnaroundTime);
+                    
+                    // Add to completed processes
+                    completedProcesses.add(currentProcess);
+                    currentProcess = null;
+                }
+            } else {
+                // No process in ready queue, advance time to next arrival
+                if (!remainingProcesses.isEmpty()) {
+                    float nextArrival = remainingProcesses.stream()
+                            .map(Process::getArrivalTime)
+                            .min(Integer::compareTo)
+                            .orElse((int) currentTime + 1);
+                    System.out.printf("Time %.1f: CPU Idle until %.1f%n", currentTime, nextArrival);
+                    currentTime = nextArrival;
+                }
+            }
+        }
+    }
+
+    private void updateReadyQueue(List<Process> remainingProcesses, List<Process> readyQueue, float currentTime) {
+        for (int i = 0; i < remainingProcesses.size(); i++) {
+            Process p = remainingProcesses.get(i);
+            if (p.getArrivalTime() <= currentTime) {
+                readyQueue.add(p);
+                remainingProcesses.remove(i);
+                i--;
+            }
+        }
+    }
+
+    @Override
+    public void Display_initial_process_list() {
+        System.out.printf("%-10s %-12s %-12s %-12s%n", 
+                "Process", "Burst Time", "Arrival Time", "Priority");
+        for (Process p : processes) {
+            System.out.printf("%-10s %-12d %-12d %-12d%n",
+                    p.getName(),
+                    p.getBurstTime(),
+                    p.getArrivalTime(),
+                    p.getPriority());
+        }
     }
 
     @Override
     public void detailedExecutionTimeline() {
-        List<Process> remainingProcesses = new ArrayList<>(processes);
-        currentTime = 0;
-        completedProcesses.clear();
-
         System.out.println("\nDetailed Execution Timeline:");
-        System.out.println("Time\tProcess");
-
-        while (!remainingProcesses.isEmpty()) {
-            Process nextProcess = getNextProcess(remainingProcesses, currentTime);
-
-            if (nextProcess != null) {
-                // Set process start time if it hasn't started yet
-                if (nextProcess.getStartTime() == 0) {
-                    nextProcess.setStartTime(currentTime);
-                }
-
-                // Execute the process
-                System.out.println(currentTime + "\t" + nextProcess.getName() + " starts");
-                currentTime += nextProcess.getBurstTime();
-                System.out.println(currentTime + "\t" + nextProcess.getName() + " completes");
-
-                // Calculate turnaround time and waiting time
-                float turnaroundTime = currentTime - nextProcess.getArrivalTime();
-                float waitingTime = turnaroundTime - nextProcess.getBurstTime();
-
-                nextProcess.setTurnaroundTime(turnaroundTime);
-                nextProcess.setWaitTime(waitingTime);
-
-                remainingProcesses.remove(nextProcess);
-                completedProcesses.add(nextProcess);
-            } else {
-                // No process available at current time, move to next arrival time
-                int nextArrivalTime = Integer.MAX_VALUE;
-                for (Process p : remainingProcesses) {
-                    if (p.getArrivalTime() > currentTime && p.getArrivalTime() < nextArrivalTime) {
-                        nextArrivalTime = p.getArrivalTime();
-                    }
-                }
-                currentTime = nextArrivalTime;
+        float currentTime = 0;
+        
+        for (Process p : completedProcesses) {
+            if (currentTime < p.getArrivalTime()) {
+                float idleTime = p.getArrivalTime();
+                System.out.printf("Time %.1f - %.1f: CPU Idle%n",
+                        currentTime, idleTime);
+                currentTime = idleTime;
             }
+            
+            float startTime = currentTime;
+            float endTime = startTime + p.getBurstTime();
+            
+            System.out.printf("Time %.1f: Process %s starts execution%n",
+                    startTime, p.getName());
+            System.out.printf("Time %.1f: Process %s completes execution%n",
+                    endTime, p.getName());
+            
+            currentTime = endTime;
         }
-    }
-
-    private Process getNextProcess(List<Process> remainingProcesses, int currentTime) {
-        Process selectedProcess = null;
-        int shortestBurst = Integer.MAX_VALUE;
-
-        for (Process process : remainingProcesses) {
-            if (process.getArrivalTime() <= currentTime && process.getBurstTime() < shortestBurst) {
-                shortestBurst = process.getBurstTime();
-                selectedProcess = process;
-            }
-        }
-
-        return selectedProcess;
     }
 
     @Override
     public List<Process> calculateWaitingTime(List<Process> processes) {
-        if (completedProcesses.isEmpty()) {
-            detailedExecutionTimeline();
+        float totalWaitingTime = 0;
+        System.out.println("\nWaiting Times:");
+        
+        for (Process p : completedProcesses) {
+            System.out.printf("Process %s waiting time: %d%n",
+                    p.getName(), p.getWaitingTime());
+            totalWaitingTime += p.getWaitingTime();
         }
+        
+        float avgWaitingTime = totalWaitingTime / completedProcesses.size();
+        System.out.printf("Average Waiting Time: %.2f%n", avgWaitingTime);
+        
         return completedProcesses;
     }
 
     @Override
     public List<Process> calculateTurnaroundTime(List<Process> processes) {
-        if (completedProcesses.isEmpty()) {
-            detailedExecutionTimeline();
+        float totalTurnaroundTime = 0;
+        System.out.println("\nTurnaround Times:");
+        
+        for (Process p : completedProcesses) {
+            float processTurnaroundTime = p.getBurstTime() + p.getWaitingTime();
+            System.out.printf("Process %s turnaround time: %.1f%n",
+                    p.getName(), processTurnaroundTime);
+            totalTurnaroundTime += processTurnaroundTime;
         }
+        
+        float avgTurnaroundTime = totalTurnaroundTime / completedProcesses.size();
+        System.out.printf("Average Turnaround Time: %.2f%n", avgTurnaroundTime);
+        
         return completedProcesses;
-    }
-
-    @Override
-    public void Display_initial_process_list() {
-        System.out.println("\nInitial Process List:");
-        System.out.println("Process\tArrival Time\tBurst Time\tPriority\tQuantum");
-        for (Process p : processes) {
-            System.out.println(p.getName() + "\t" + p.getArrivalTime() + "\t\t" +
-                    p.getBurstTime() + "\t\t" + p.getPriority() + "\t\t" + p.getQuantum());
-        }
     }
 }
