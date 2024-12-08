@@ -7,11 +7,18 @@ import java.util.List;
 public class SJFScheduler implements Scheduler {
     private List<Process> processes;
     private List<Process> completedProcesses;
+    private static final float AGING_FACTOR = 0.1f; // Factor to increase priority based on waiting time
 
     SJFScheduler(List<Process> processes) {
         this.processes = new ArrayList<>(processes);
         this.completedProcesses = new ArrayList<>();
         executeProcesses();
+    }
+
+    private float calculateDynamicPriority(Process process, float currentTime) {
+        float waitingTime = currentTime - process.getArrivalTime();
+        // The longer a process waits, the lower its effective burst time becomes
+        return process.getBurstTime() - (waitingTime * AGING_FACTOR);
     }
 
     private void executeProcesses() {
@@ -33,10 +40,11 @@ public class SJFScheduler implements Scheduler {
             }
 
             if (!readyQueue.isEmpty()) {
-                // Sort ready queue by burst time (shortest remaining time first)
-                readyQueue.sort(Comparator.comparingInt(Process::getBurstTime));
+                // Sort ready queue by dynamic priority (considering both burst time and waiting time)
+                final float sortTime = currentTime;
+                readyQueue.sort(Comparator.comparingDouble(p -> calculateDynamicPriority(p, sortTime)));
                 
-                // Get the process with shortest remaining time
+                // Get the process with highest dynamic priority
                 Process nextProcess = readyQueue.remove(0);
                 
                 if (currentProcess == null || nextProcess != currentProcess) {
