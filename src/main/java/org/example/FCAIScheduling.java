@@ -45,10 +45,10 @@ public class FCAIScheduling implements Scheduler {
     }
 
     // Get the ready queue of processes that are ready to run based on current time
-    List<Process> get_ready_processes(List<Process> processes, int currentTime) {
+    List<Process> get_ready_processes(List<Process> processes, int currentTime, Process running) {
         List<Process> readyQueue = new ArrayList<>();
         for (Process process : processes) {
-            if (process.getArrivalTime() <= currentTime && process.getBurstTime() > 0) {
+            if (process.getArrivalTime() <= currentTime && process.getBurstTime() > 0 && process != running) {
                 readyQueue.add(process);
             }
         }
@@ -58,6 +58,8 @@ public class FCAIScheduling implements Scheduler {
 
 
     public void print_details(Process running, int currentTime) {
+        if (running == null)
+            return;
         System.out.printf("%-15s %-15s %-20s %-20s %-20s %-15s %-25s%n",
                 (running.getStartTime() + " - " + (currentTime)),
                 running.getName(),
@@ -70,62 +72,73 @@ public class FCAIScheduling implements Scheduler {
 
     @Override
     public void detailedExecutionTimeline() {
-        List<Process> processes1 = new ArrayList<Process>(processes);
-        int currentTime = 0;
         System.out.printf("%-15s %-15s %-20s %-20s %-20s %-15s %-25s%n",
                 "Time", "Processes", "Executed-time", "Remaining-Burst",
                 "Updated-Quantum", "Priority", "FCAI-Factor");
 
-        Process waiting = null;
-        while (!processes1.isEmpty()) { // Ensure loop ends
-            List<Process> readyQueue = get_ready_processes(processes1, currentTime);
-            if (readyQueue.isEmpty()) break;
-            Process running = readyQueue.get(0);
-            if (waiting != null) {
-                processes1.add(waiting);
-                waiting = null;
-            }
-            running.setStartTime(currentTime);
+        List<Process> ready = get_ready_processes(processes, 0, null);
+        Queue<Process> waiting = new LinkedList<>();
+        Process running = null;
+        boolean from_waiting = true;
+        boolean allow_preemption = true;
+        int currentTime = -1;
 
-            if (running.getWaitTime() == Integer.MAX_VALUE)
-                running.setWaitTime(currentTime - running.getArrivalTime());
+        while (true) {
+            currentTime++;
+            ready = get_ready_processes(processes, currentTime, running);
+            for (Process process : ready)
+                if (process.getArrivalTime() == currentTime && process != running)
+                    waiting.add(process);
 
+            if (running != null) {
+                int excuted = currentTime - running.getStartTime();
+                int runningQuantum = running.getQuantum();
 
-            int runningQuantum = running.getQuantum();
-            int burstBefore = running.getBurstTime();
+                if (running.getBurstTime() == 0)
+                    running.setTurnaroundTime(currentTime - running.getArrivalTime());
 
-            // Execute process and allow preemption check
-            for (int i = 1; running.getBurstTime() > 0 && i <= runningQuantum; i++) {
-                running.setBurstTime(running.getBurstTime() - 1);
-                currentTime++;
-                if (i >= Math.ceil(runningQuantum * 0.4)) { // Check preemption after 40%
-                    List<Process> updatedQueue = get_ready_processes(processes1, currentTime);
-                    if (i == runningQuantum && running.getBurstTime() != 0) {
-                        waiting = running;
-                        processes1.remove(running);
-                        running.setQuantum(runningQuantum + 2);
+                // finish it's quantum or finished it's burst
+                if (!ready.isEmpty() && excuted == runningQuantum || running.getBurstTime() == 0) {
+                    if (running.getBurstTime() != 0)
+                        waiting.add(running);
 
-                        // handel if there is one process waiting and no process ready
-                        if(processes1.size() == 0 && waiting != null) {
-                            processes1.add(waiting);
-                            waiting = null;
-                        }
-                    }
-
-                    if (!updatedQueue.isEmpty() && calculateFcaiFactor(updatedQueue.get(0)) < calculateFcaiFactor(running)) {
-                        running.setQuantum(runningQuantum * 2 - i);
-                        break;
-                    }
+                    running.setQuantum(runningQuantum + 2);
+                    ready.remove(running);
+                    from_waiting = true;
                 }
+                if (excuted >= Math.ceil(runningQuantum * 0.4))
+                    allow_preemption = true;
+
             }
-            if (running.getBurstTime() == 0) {
-                running.setTurnaroundTime(currentTime - running.getArrivalTime());
-                processes1.remove(running);
+            // if the last one end its quantum pick form the waiting queue
+            if (from_waiting || ready.isEmpty() && !waiting.isEmpty()) {
+                print_details(running, currentTime);
+                running = waiting.peek();
+                running.setStartTime(currentTime);
+            } else if (!ready.isEmpty() && allow_preemption && calculateFcaiFactor(ready.get(0)) <= calculateFcaiFactor(running)) {
+                running.setQuantum(running.getQuantum() * 2 - (currentTime - running.getStartTime()));
+                waiting.add(running);
+                print_details(running, currentTime);
+                running = ready.get(0);
+                running.setStartTime(currentTime);
             }
-            print_details(running, currentTime);
+            waiting.remove(running);
+
+            if (running != null) {
+                if (running.getWaitTime() == Integer.MAX_VALUE)
+                    running.setWaitTime(currentTime - running.getArrivalTime());
+                running.setBurstTime(running.getBurstTime() - 1);
+            }
+
+            if (ready.isEmpty() && waiting.isEmpty() && (running == null || running.getBurstTime() == 0)) {
+                print_details(running, currentTime + 1);
+                break;
+            }
+
+            allow_preemption = false;
+            from_waiting = false;
         }
     }
-
 
     @Override
     public List<Process> calculateWaitingTime(List<Process> processes) {
