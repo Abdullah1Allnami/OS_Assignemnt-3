@@ -3,7 +3,7 @@
 | Class      | Person   |   Status   |
 | ---------  | -------- | ---------- |
 | Ahmed      |  Priority| progress   |
-| Abdulwahab |  SJF     | progress   |
+| Abdulwahab |  SJF     | Done       |
 | Hassan     |  SRTF    | progress   |
 | Abdullah   |  FCAI    | progress   |
 
