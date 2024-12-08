@@ -23,7 +23,7 @@ public class CPU_Simulator {
         };
 
         InputHandler inputHandler = new InputHandler();
-        List<Process> processes = inputHandler.getProcessesFromFile("/Users/bdallhsydbdallh/Library/Mobile Documents/com~apple~CloudDocs/4-OS/Labs/OS_Assignment-3/src/main/java/org/example/input.txt", choice);
+        List<Process> processes = inputHandler.getProcessesFromFile("/Users/bdallhsydbdallh/IdeaProjects/OS_Assignemnt-3--lasst/src/main/java/org/example/input2.txt", choice);
 
         Scheduler scheduler = SchedulerFactory.createScheduler(schedulerType, processes);
 

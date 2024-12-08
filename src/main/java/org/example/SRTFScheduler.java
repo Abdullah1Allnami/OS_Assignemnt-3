@@ -8,7 +8,7 @@ public class SRTFScheduler implements Scheduler {
     // Aging parameters
     private final float contextSwitchTime = 0.5f;  // Time required for context switching
     private final int agingThreshold = 10;        // Threshold to start aging
-    private final float scalingFactor = 5.0f;     // Factor to scale aging adjustments
+    private final int agingReduction = 1;         // Fixed reduction for aging
 
     public SRTFScheduler(List<Process> processes) {
         this.processes = processes;
@@ -16,7 +16,7 @@ public class SRTFScheduler implements Scheduler {
 
     @Override
     public void detailedExecutionTimeline() {
-        int currentTime = 0;
+        float currentTime = 0;
         int completed = 0;
         int n = processes.size();
         int[] remainingBurstTime = new int[n];
@@ -41,7 +41,7 @@ public class SRTFScheduler implements Scheduler {
 
                     // Apply aging if the process has waited too long
                     if (waitingTime[i] >= agingThreshold) {
-                        effectiveBurstTime -= (waitingTime[i] / scalingFactor);
+                        effectiveBurstTime -= agingReduction;
                         if (effectiveBurstTime < 1) effectiveBurstTime = 1; // Ensure minimum burst time
                     }
 
@@ -60,16 +60,20 @@ public class SRTFScheduler implements Scheduler {
 
             Process currentProcess = processes.get(minIndex);
 
+
+            if (currentProcess.getWaitTime() == Float.MAX_VALUE)
+                currentProcess.setWaitTime(currentTime);
+
             // Simulate context switching if the process is different from the previous one
             if (previousProcess != null && !previousProcess.getName().equals(currentProcess.getName())) {
                 System.out.printf("Time %.1f: Context switch from %s to %s%n",
-                        (float) currentTime,
+                        currentTime,
                         previousProcess.getName(),
                         currentProcess.getName());
                 currentTime += contextSwitchTime; // Add context switch time
             }
 
-            System.out.printf("Time %d: Process %s starts execution%n", currentTime, currentProcess.getName());
+            System.out.printf("Time %f: Process %s starts execution%n", currentTime, currentProcess.getName());
 
             // Execute the process for one time unit
             remainingBurstTime[minIndex]--;
@@ -84,13 +88,10 @@ public class SRTFScheduler implements Scheduler {
 
             // Check if process is completed
             if (remainingBurstTime[minIndex] == 0) {
+                currentProcess.setTurnaroundTime(currentTime - currentProcess.getArrivalTime());
                 isCompleted[minIndex] = true;
                 completed++;
-                int completionTime = currentTime;
-                currentProcess.setTurnaroundTime(completionTime - currentProcess.getArrivalTime());
-                float waitTime = currentProcess.getTurnaroundTime() - currentProcess.getBurstTime();
-                currentProcess.setWaitTime(waitTime);
-                System.out.printf("Time %d: Process %s completes execution%n", currentTime, currentProcess.getName());
+                System.out.printf("Time %f: Process %s completes execution%n", currentTime, currentProcess.getName());
             }
 
             // Update the previous process

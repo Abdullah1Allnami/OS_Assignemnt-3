@@ -8,7 +8,7 @@ public class Process {
     private int quantum;
     private int startTime = 0;
     private float turnaroundTime = 0;
-    private float waitTime = Integer.MAX_VALUE;
+    private float waitTime = Float.MAX_VALUE;
 
     public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
         this.name = name;
@@ -45,5 +45,8 @@ public class Process {
     public void setTurnaroundTime(float turnaroundTime) {
         if (turnaroundTime < 0) throw new IllegalArgumentException("Turnaround time cannot be negative.");
         this.turnaroundTime = turnaroundTime;
+    }
+    public String getProcessName() {
+        return this.name;
     }
 }

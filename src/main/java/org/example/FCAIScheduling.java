@@ -125,7 +125,7 @@ public class FCAIScheduling implements Scheduler {
             waiting.remove(running);
 
             if (running != null) {
-                if (running.getWaitTime() == Integer.MAX_VALUE)
+                if (running.getWaitTime() == Float.MAX_VALUE)
                     running.setWaitTime(currentTime - running.getArrivalTime());
                 running.setBurstTime(running.getBurstTime() - 1);
             }

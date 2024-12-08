@@ -59,7 +59,7 @@ public class SJFScheduler implements Scheduler {
                     // Calculate waiting time
                     float waitingTime = currentTime - currentProcess.getArrivalTime();
                     if (waitingTime > 0) {
-                        currentProcess.setWaitingTime((int) waitingTime);
+                        currentProcess.setWaitTime((int) waitingTime);
                     }
                     
                     System.out.printf("Time %.1f: Process %s starts/resumes execution (Remaining Time: %d)%n",
@@ -152,9 +152,9 @@ public class SJFScheduler implements Scheduler {
         System.out.println("\nWaiting Times:");
         
         for (Process p : completedProcesses) {
-            System.out.printf("Process %s waiting time: %d%n",
-                    p.getName(), p.getWaitingTime());
-            totalWaitingTime += p.getWaitingTime();
+            System.out.printf("Process %s waiting time: %f%n",
+                    p.getName(), p.getWaitTime());
+            totalWaitingTime += p.getWaitTime();
         }
         
         float avgWaitingTime = totalWaitingTime / completedProcesses.size();
@@ -169,7 +169,7 @@ public class SJFScheduler implements Scheduler {
         System.out.println("\nTurnaround Times:");
         
         for (Process p : completedProcesses) {
-            float processTurnaroundTime = p.getBurstTime() + p.getWaitingTime();
+            float processTurnaroundTime = p.getBurstTime() + p.getWaitTime();
             System.out.printf("Process %s turnaround time: %.1f%n",
                     p.getName(), processTurnaroundTime);
             totalTurnaroundTime += processTurnaroundTime;
